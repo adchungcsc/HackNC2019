@@ -220,7 +220,7 @@ public class GoogleMapsDirectionWebServices {
 			// Find the first instance of lat and longitude
 			double latitude = locationNode.findValue("lat").asDouble();
 			double longitude = locationNode.findValue("lng").asDouble();
-			System.out.println(latitude + " " + longitude);
+			//System.out.println(latitude + " " + longitude);
 			return new ExactLocation(latitude, longitude);
 		} catch (IOException e) {
 			e.printStackTrace();
