@@ -7,7 +7,7 @@ import java.util.ArrayList;
  * @author Alex
  *
  */
-public class Directions {
+public class TransitDirections {
 	private ExactLocation startPoint;
 	private ExactLocation endPoint;
 	private String localCost;

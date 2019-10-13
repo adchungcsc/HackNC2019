@@ -10,18 +10,20 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.modejump.transitmap.Directions;
+import com.modejump.transitmap.TransitDirections;
 import com.modejump.transitmap.ExactLocation;
+import com.modejump.transitmap.ManualMotionDirections;
 import com.modejump.transitmap.Step;
 
 /**
+ * 
  * @author Alex
  *
  */
 public class GoogleMapsDirectionWebServices {
 	/** Base string for querying direction from API */
 	private static final String DIRECTION_QUERY_BASE = "https://maps.googleapis.com/maps/api/directions/json?";
-
+	
 	/** Log errors */
 	static Logger logger = Logger.getLogger(GoogleMapsDirectionWebServices.class.getName());
 
@@ -44,9 +46,14 @@ public class GoogleMapsDirectionWebServices {
 		this.keys = keys;
 	}
 
-	public Directions getDirectionsUsingMode(String origin, String destination, String mode) {
-		// Attempting to query with a get request similar to the following:
-		// https://maps.googleapis.com/maps/api/directions/json?origin=35.909108,-79.048576&destination=35.788786,-78.672599&mode=transit&transit_routing_preference=fewer_transfers&key=[KEY_HERE]
+	/**
+	 * 
+	 * @param origin
+	 * @param destination
+	 * @param mode bicycling or walking (not hard enforced as of now)
+	 * @return
+	 */
+	public ManualMotionDirections getDirectionsUsingMode(String origin, String destination, String mode) {
 		// Build the HTTPS API query for a get
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append(DIRECTION_QUERY_BASE);
@@ -54,12 +61,13 @@ public class GoogleMapsDirectionWebServices {
 		stringBuilder.append(origin);
 		stringBuilder.append("&destination=");
 		stringBuilder.append(destination);
-		stringBuilder.append("&mode=transit");
+		stringBuilder.append("&mode=");
+		stringBuilder.append(mode);
 		stringBuilder.append("&key=");
 		stringBuilder.append(keys.getDirectionsAPIKey());
 		// Get ready to read the returned JSON
 		ObjectMapper mapper = new ObjectMapper();
-		Directions directions = new Directions();
+		ManualMotionDirections directions = new ManualMotionDirections();
 		try {
 			// Query the google maps API and store it in the POJO
 			// Taking a stroll in the forest.
@@ -71,17 +79,14 @@ public class GoogleMapsDirectionWebServices {
 			if (route == null) {
 				return null;
 			}
-			String localCost = route.findValue("fare").findValue("text").asText();
 			String duration = route.findValue("duration").findValue("text").asText();
 			String distance = route.findValue("distance").findValue("text").asText();
 			ArrayList<Step> steps = processTransitSteps(route.findValue("steps"));
-			directions.setLocalCost(localCost);
 			directions.setDuration(duration);
 			directions.setTotalDistance(distance);
 			directions.setSteps(steps);
 			directions.setEndPoint(new ExactLocation(destination));
 			directions.setStartPoint(new ExactLocation(origin));
-			System.out.println(localCost + " | " + duration + " | " + distance);
 		} catch (JsonParseException e) {
 			logger.log(Level.WARNING, "Google maps direction JSON parse", e);
 		} catch (JsonMappingException e) {
@@ -117,7 +122,7 @@ public class GoogleMapsDirectionWebServices {
 	 * 
 	 * @return directions if query was successful, null if not.
 	 */
-	public Directions getDirectionsUsingTransit(String origin, String destination) {
+	public TransitDirections getDirectionsUsingTransit(String origin, String destination) {
 		// Attempting to query with a get request similar to the following:
 		// https://maps.googleapis.com/maps/api/directions/json?origin=35.909108,-79.048576&destination=35.788786,-78.672599&mode=transit&transit_routing_preference=fewer_transfers&key=[KEY_HERE]
 		// Build the HTTPS API query for a get
@@ -132,7 +137,7 @@ public class GoogleMapsDirectionWebServices {
 		stringBuilder.append(keys.getDirectionsAPIKey());
 		// Get ready to read the returned JSON
 		ObjectMapper mapper = new ObjectMapper();
-		Directions directions = new Directions();
+		TransitDirections directions = new TransitDirections();
 		try {
 			// Query the google maps API and store it in the POJO
 			// Taking a stroll in the forest.
@@ -154,7 +159,7 @@ public class GoogleMapsDirectionWebServices {
 			directions.setSteps(steps);
 			directions.setEndPoint(new ExactLocation(destination));
 			directions.setStartPoint(new ExactLocation(origin));
-			System.out.println(localCost + " | " + duration + " | " + distance);
+			//System.out.println(localCost + " | " + duration + " | " + distance);
 		} catch (JsonParseException e) {
 			logger.log(Level.WARNING, "Google maps direction JSON parse", e);
 		} catch (JsonMappingException e) {
